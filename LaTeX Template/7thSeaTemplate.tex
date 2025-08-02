@@ -1,0 +1,687 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 7TH SEA RPG TEMPLATE
+% A template for creating 7th Sea RPG sourcebooks
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%% BOOK TITLE %%%%
+\newcommand{\bookTitleFooter}{7th Sea Template}
+
+
+%%%% DOCUMENT CLASS %%%%
+\documentclass[10pt,a4paper,twoside,twocolumn,openany]{book}
+
+%%%% ESSENTIAL PACKAGES %%%%
+% Language and encoding
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+
+% Core functionality
+\usepackage{expl3}
+\usepackage{xparse}
+\usepackage{etoolbox}
+\usepackage{xstring}
+\usepackage{comment}
+\usepackage[framemethod=TikZ]{mdframed}
+
+
+%%%% FONT CONFIGURATION %%%%
+\usepackage{palatino}  % Main font (DnD style)
+\usepackage{avant}    % For tables (Avant Garde)
+
+%%%% PAGE LAYOUT %%%%
+% Margin variables (LaTeX3 syntax)
+\ExplSyntaxOn
+\dim_new:N \c_my_top_margin_dim
+\dim_set:Nn \c_my_top_margin_dim { 0.7in }
+\dim_new:N \c_my_bottom_margin_dim
+\dim_set:Nn \c_my_bottom_margin_dim { 0.8in }
+\dim_new:N \c_my_side_margin_dim
+\dim_set:Nn \c_my_side_margin_dim { 0.7in }
+\dim_new:N \c_my_column_space_dim
+\dim_set:Nn \c_my_column_space_dim { 0.3in }
+% Theme name
+\tl_new:N \l_theme_tl
+\tl_set:Nn \l_theme_tl {theah}
+
+% Convert to standard LaTeX lengths
+\newlength{\mytopmargin}
+\newlength{\mybottommargin}
+\newlength{\mysidemargin}
+\newlength{\mycolumnspace}
+\setlength{\mytopmargin}{\c_my_top_margin_dim}
+\setlength{\mybottommargin}{\c_my_bottom_margin_dim}
+\setlength{\mysidemargin}{\c_my_side_margin_dim}
+\setlength{\mycolumnspace}{\c_my_column_space_dim}
+\ExplSyntaxOff
+
+% Apply margin settings
+\usepackage[
+a4paper,
+lmargin=\mysidemargin,
+rmargin=\mysidemargin,
+tmargin=\mytopmargin,
+bmargin=\mybottommargin
+]{geometry}
+\setlength{\columnsep}{\mycolumnspace}
+
+%%%% COLOR DEFINITIONS %%%%
+\usepackage{xcolor}
+\usepackage[table]{xcolor}  % For table row coloring
+
+% Region-based colors (using HTML hex)
+\definecolor{baseColor}{HTML}{3765C4}    % Base blue
+\definecolor{colorText}{HTML}{3765C4}    % Base blue
+\definecolor{theah}{HTML}{3765C4}        % Base blue
+\definecolor{khitai}{HTML}{6DBA58}       % Jade green
+\definecolor{1knations}{HTML}{A00909}    % Crimson red
+\definecolor{newWorld}{HTML}{C8A000}     % Amber gold
+\definecolor{ifri}{HTML}{EB6000}         % Volcanic orange
+\definecolor{crescentEmpire}{HTML}{8F431B} % Terracotta
+\definecolor{citiesOfWonder}{HTML}{782FA9}   % Royal purple
+\definecolor{pirateNations}{HTML}{666666} % Pure black
+\definecolor{priceOfArrogance}{HTML}{367fa3} % Caribbean Blue
+
+% Define a helper function to set all theme variables at once
+\ExplSyntaxOn
+\cs_new:Npn \set_theme_variables:n #1 {
+	\colorlet{baseColor}{#1}
+	\colorlet{colorText}{#1}
+	\tl_set:Nn \l_theme_tl {#1}
+}
+
+% Create a user-level interface
+\cs_new_eq:NN \SetThemeVariables \set_theme_variables:n
+\ExplSyntaxOff
+
+% Simplified color switching function
+\newcommand{\setTheme}[1]{%
+	\IfStrEqCase{#1}{%
+		{theah}{\SetThemeVariables{theah}}%
+		{khitai}{\SetThemeVariables{khitai}}%
+		{1knations}{\SetThemeVariables{1knations}}%
+		{newWorld}{\SetThemeVariables{newWorld}}%
+		{ifri}{\SetThemeVariables{ifri}}%
+		{crescentEmpire}{\SetThemeVariables{crescentEmpire}}%
+		{citiesOfWonder}{\SetThemeVariables{citiesOfWonder}}%
+		{pirateNations}{\SetThemeVariables{pirateNations}}%
+		{priceOfArrogance}{\SetThemeVariables{priceOfArrogance}}%
+	}%
+}
+
+
+%%%% HEADERS & FOOTERS %%%%
+\usepackage{fancyhdr}
+\usepackage{changepage}  % For reliable odd/even page detection
+
+
+% Configure footer style
+\pagestyle{fancy}
+\fancyhf{} % Clear existing headers/footers
+\renewcommand{\headrulewidth}{0pt} % Remove header line
+
+% Create a user-level command to access the theme
+\ExplSyntaxOn
+\cs_new:Npn \gettheme { \tl_use:N \l_theme_tl }
+\ExplSyntaxOff
+
+% Even pages (left footer)
+\fancyfoot[LE]{%
+	\raisebox{-1em}[0pt][0pt]{%
+		\hspace{3em}%
+		\textcolor{baseColor}{\small \bookTitleFooter}%
+
+	}%
+}
+
+% Odd pages (right footer)
+\fancyfoot[RO]{%
+	\raisebox{-1em}[0pt][0pt]{%
+		\textcolor{baseColor}{\small \leftmark}%
+		\hspace{3em}%
+	}%
+}
+
+
+% Centered footer with image and page number
+\fancyfoot[C]{%
+	\begin{tikzpicture}[remember picture,overlay]
+		% Calculate current page number
+		\pgfmathtruncatemacro{\currentpage}{\value{page}}
+		% Place page number centered at bottom
+		\node[inner sep=0pt,anchor=south,yshift=0.42in] at (current page.south) {\thepage};
+		% Scroll image full width
+		\node[inner sep=0pt,anchor=south] at (current page.south) {%
+			\includegraphics[width=\paperwidth]{img/\gettheme/footerscroll}%
+		};
+	\end{tikzpicture}%
+}
+
+\fancypagestyle{plain}{%
+	\renewcommand{\headrulewidth}{0pt}
+	\fancyhf{} % Clear all headers and footers
+	
+% Even pages (left footer)
+\fancyfoot[LE]{%
+	\raisebox{-1em}[0pt][0pt]{%
+		\hspace{3em}%
+		\textcolor{baseColor}{\small \bookTitleFooter}%
+		
+	}%
+}
+
+% Odd pages (right footer)
+\fancyfoot[RO]{%
+	\raisebox{-1em}[0pt][0pt]{%
+		\textcolor{baseColor}{\small \leftmark}%
+		\hspace{3em}%
+	}%
+}
+	
+	% Centered footer with image and page number
+	\fancyfoot[C]{%
+		\begin{tikzpicture}[remember picture,overlay]
+			\pgfmathtruncatemacro{\currentpage}{\value{page}}
+			\node[inner sep=0pt,anchor=south,yshift=0.42in] at (current page.south) {\thepage};
+			\node[inner sep=0pt,anchor=south] at (current page.south) {%
+				\includegraphics[width=\paperwidth]{img/\gettheme/footerscroll}%
+			};
+		\end{tikzpicture}%
+	}
+}
+
+
+
+%%%% GRAPHICS & DRAWING TOOLS %%%%
+\usepackage{eso-pic}  % For background images and absolute positioning
+\usepackage{tikz}     % For vector graphics
+\usepackage[most]{tcolorbox}  % For colored boxes
+\usepackage{graphicx}
+\tcbset{sharp corners}  % Global setting for all tcolorboxes
+
+%%%% TABLE PACKAGES %%%%
+\usepackage{tabularx}  % For flexible width tables
+\usepackage{cellspace} % For cell padding
+\renewcommand{\arraystretch}{1.5}  % Increase row height
+
+%%%% SECTION FORMATTING %%%%
+\usepackage{titlesec}
+\usepackage{titletoc}  % For TOC customization
+
+% Always place chapters on odd pages
+\pretocmd{\chapter}{\cleardoublepage}{}{}
+
+% Chapter formatting
+\titleformat{\chapter}[display]
+{\normalfont\Huge\filcenter}
+{}{0pt}
+{\vspace*{0.01\textheight}\MakeUppercase}
+[\vskip-12pt{\color{baseColor}\rule{\linewidth}{1pt}}]
+
+% Section formatting
+\titleformat{\section}[block]
+{\normalfont\LARGE}{}{0pt}{\MakeUppercase}
+
+% Subsection formatting
+\titleformat{\subsection}[block]
+{\normalfont\Large}{}{0pt}{\MakeUppercase}
+
+% Subsubsection formatting
+\titleformat{\subsubsection}[block]
+{\normalfont\large}{}{0pt}{\MakeUppercase}
+
+%%%% TABLE OF CONTENTS STYLING %%%%
+% Center the TOC title
+\makeatletter
+\renewcommand\tableofcontents{%
+	\chapter*{\centering\normalfont\Huge\contentsname}
+	\@starttoc{toc}%
+}
+\makeatother
+
+% Part entries
+\titlecontents{part}
+[0pt]
+{\addvspace{.06in}\large\bfseries\rmfamily}
+{\partname\ \thecontentslabel:~}
+{}
+{\hfill\contentspage}
+[\addvspace{-.03in}\titleline{\color{baseColor}\titlerule[1pt]}\addvspace{.05in}]
+
+% Chapter entries
+\titlecontents{chapter}
+[0pt]
+{\addvspace{.04in}\large\scshape\rmfamily\color{baseColor}}
+{}
+{}
+{\hfill\contentspage}
+[\addvspace{-.03in}\titleline{\color{black}\titlerule[0.5pt]}\addvspace{.05in}]
+
+% Section entries
+\titlecontents{section}
+[0pt]
+{\normalsize\scshape\rmfamily}
+{}
+{}
+{\titlerule*{.}\contentspage}
+
+% Subsection entries
+\titlecontents{subsection}
+[10pt]
+{\normalsize\scshape\rmfamily}
+{}
+{}
+{\titlerule*{.}\contentspage}
+
+% Subsubsection entries
+\titlecontents{subsubsection}
+[15pt]
+{\normalsize\scshape\rmfamily}
+{}
+{}
+{\titlerule*{.}\contentspage}
+
+% TOC depth settings
+\setcounter{tocdepth}{3}  % Show up to subsubsection level
+\setcounter{secnumdepth}{-1}  % Remove numbering from all section levels
+
+%%%% CUSTOM ENVIRONMENTS & COMMANDS %%%%
+% Table-related commands and environments
+\ExplSyntaxOn
+% Centered column definition
+\newcolumntype{Y}{>{\centering\arraybackslash}X}
+
+% Define custom keys for tables
+\keys_define:nn { custom / table } {
+	color .tl_set:N = \l__custom_table_color_tl,
+	color .initial:n = white,
+	color .value_required:n = true,
+	header .tl_set:N = \l__custom_table_header_tl,
+	header .value_required:n = true,
+	width .dim_set:N = \l__custom_table_width_dim,
+	width .value_required:n = true,
+}
+
+% Nice Table environment
+\NewDocumentEnvironment {NiceTable} { o m } {
+	\group_begin:
+	% Set default width to linewidth
+	\dim_set:Nn \l__custom_table_width_dim { \linewidth }
+	
+	% Process optional arguments
+	\tl_if_novalue:nF {#1} { \keys_set:nn { custom / table } {#1} }
+	
+	% Add spacing before table
+	\par \vspace { 9pt plus 3pt minus 3pt } \noindent
+	
+	% Process header if provided
+	\tl_if_empty:NF \l__custom_table_header_tl {
+		\group_begin:
+		\large\bfseries\sffamily \l__custom_table_header_tl \nopagebreak
+		\par \vspace{ 5pt plus 2pt minus 2pt } \noindent
+		\group_end:
+	}
+	
+	% Apply font settings
+	\small % Set font size to small
+	\sffamily % Switch to sans-serif font family
+	
+	% Set up row colors
+	\rowcolors {1} {\l__custom_table_color_tl} {}
+	
+	% Begin tabularx environment
+	\tabularx {\l__custom_table_width_dim} {#2}
+} {
+	\endtabularx 
+	\vspace { 9pt plus 3pt minus 3pt }
+	\group_end:
+}
+\ExplSyntaxOff
+
+% Citation environment
+\NewDocumentEnvironment{Citation}{ o m } {
+	\par\vspace{1em}
+	\begin{center}
+		\itshape „#2''
+	\end{center}
+	\IfValueT{#1}{
+		\par\noindent\hfill{\itshape\textemdash\ #1}\par
+	}
+	\vspace{0.5em}
+} {}
+
+% Top floating box command
+\NewDocumentCommand{\placetopbox}{}{
+	\begin{tikzpicture}[remember picture, overlay]
+		\checkoddpage
+		\ifoddpage
+		% Odd page - position at north west (left side)
+		\fill[baseColor] ([xshift=\columnwidth+\mysidemargin+\mycolumnspace] current page.north west) rectangle
+		++(\columnwidth,-\mytopmargin);
+
+		\else
+		% Even page - position at north east (right side)
+		\fill[baseColor] ([xshift=-\columnwidth-\mysidemargin-\mycolumnspace]current page.north east) rectangle
+		++(-\columnwidth,-\mytopmargin);
+
+		\fi
+	\end{tikzpicture}
+}
+
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{framed}
+
+\newfloat{custombox}{tp}{lob}
+\floatname{custombox}{Box}
+
+% Background box for headers
+\newtcolorbox{bgbox}{
+	colback=baseColor,
+	colframe=white,
+	width=\columnwidth,
+	coltext=white,
+	left=5pt, right=5pt,
+	top=2pt, bottom=2pt
+}
+
+% Header with background
+\newcommand{\BGHeader}[1]{\begin{bgbox}\noindent\large \textsc{\MakeUppercase{#1}}\end{bgbox}}
+
+% Quirk definition (game mechanic)
+\newcommand{\Quirk}[2]{\medskip \noindent \textsc{#1}: \textit{#2}}
+
+
+
+% Colored text environment
+\NewDocumentEnvironment{ColorText}{m}{
+	\bigskip
+	\noindent
+	\textcolor{colorText}{#1}%
+	\textcolor{black}{}%
+}{}
+
+%%%% MISCELLANEOUS PACKAGES %%%%
+\usepackage{lipsum}  % For dummy text
+\usepackage[hidelinks]{hyperref}  % Should always be last
+
+%%%% DOCUMENT METADATA %%%%
+\title{7th Sea \\
+	\Huge Template}
+\author{}
+\date{}
+
+\begin{document}
+
+	%\setTheme{theah}  % Here set theme for the whole book: khitai, 1knations, newWorld, ifri, crescentEmpire, citiesOfWonder, pirateNations, priceOfArrogance, theah (default)
+    \maketitle
+    
+    \clearpage              % Use this two (or just second) lines to supress
+    \thispagestyle{empty}   % footer from appearing on blank pages
+    \tableofcontents
+    
+    \clearpage
+    \thispagestyle{empty} 
+    
+    \chapter{Overview}
+    \markboth{Overview}{} % Use this to get original capitalization in footer.
+    
+    This template was made to let You create beautiful yet consistent 7th Sea books,
+    a tabletop roleplaying game of swashbuckling
+    and intrigue, exploration and adventure, taking place on the
+    ­continent of Théah, a land of magic and mystery inspired by
+    our own Europe.\\
+		
+	
+    \section{Section}
+    Sections break up chapters into large groups of associated text.
+    
+    \subsection{Subsection}
+    Subsections further break down the information for the reader.
+    
+    \subsubsection{Subsubsection}
+    Subsubsections are the furthest division of text that still have a block header. Below this level, headers are displayed inline.
+	
+    \section{Tables}
+
+    \subsection{Basic Table Example}
+    
+    % Basic usage with default settings
+    
+    \begin{NiceTable}
+    	{>{\hsize=1\hsize}X >{\hsize=0.5\hsize}X >{\hsize=1.5\hsize}X}
+    	\textbf{Ship Type} & \textbf{Crew Size} & \textbf{Cargo Capacity} \\
+    	\hline
+    	Sloop & 20 & Small \\
+    	Galleon & 100 & Large \\
+    	Frigate & 60 & Medium \\
+    	Merchant Ship & 40 & Very Large
+    \end{NiceTable}
+    
+    
+    \subsection{Table with color Header and Centered Columns}
+    
+    % Using the header option and Y column type for centering
+    \begin{NiceTable}[header=Important campain characters]{Y Y Y}
+    	\rowcolor{baseColor} \color{white}\textbf{Character} & \color{white}\textbf{Nation} & \color{white}\textbf{Role} \\
+    	Captain Reis & Vodacce & Villain \\
+    	Lady MacKenzie & Highland Marches & Hero \\
+    	Don Alvarez & Castille & Sidekick \\
+    	Maria del Torres & Castille & Hero \\
+    \end{NiceTable}
+    
+    \subsection{Table with color Header and alternating rows}
+    
+    \begin{NiceTable}[
+    	header=Dueling Maneuvers,
+    	color=baseColor!30
+    	]{>{\hsize=0.7\hsize}X >{\hsize=0.7\hsize}Y >{\hsize=1.6\hsize}Y}
+    	\rowcolor{baseColor} \color{white}\textbf{Maneuver} & \color{white}\textbf{Style} & \color{white}\textbf{Effect} \\
+    	Riposte & Aldana & Counter-attack after successful defense \\
+    	Pommel Strike & Eisenfaust & Momentarily stun your opponent \\
+    	Feint & Valroux & Bypass opponent's defense with deception \\
+    	Lunge & Ambrogia & Strike from unexpected distance \\
+    	Tagging & Leegstra & Inflict minor wound to create opening \\
+    	Bind & Rogers & Lock opponent's blade to control distance
+    \end{NiceTable}
+    
+    
+    
+    \newpage
+	
+    %%%%% THIS IS SPECIAL NOTES DEFINITION %%%%%%
+    \placetopbox{}
+    \begin{custombox}[]
+    	\def\FrameCommand{%
+        	\fboxsep=\FrameSep%
+    	    \colorbox{baseColor}% No extra braces here
+    	}%
+        \begin{framed}
+    	    {\color{white}% Restrict color scope with braces
+    		\centering % Use \centering instead of \center
+    		\Large
+    		\MakeUppercase{Special Notes\\Read Carefuly}
+    		\par}% Explicitly close the color/centering group
+    	    \normalsize
+    	    \raggedright
+    	    
+    	    % Draw dotted separator for header and text
+    	    \vspace{4pt}
+    	    \begin{tikzpicture}
+    		    \draw[white, dotted, line width=6pt, dash pattern=on 1pt off 2pt] (0,0) -- (0.97\textwidth,0);
+    	    \end{tikzpicture}
+    	    %\vspace{4pt}
+    	
+    		\begin{center}
+        		\parbox{\dimexpr\linewidth-20pt\relax}{% Reduce width for larger margins
+    	    		\setlength{\baselineskip}{1.5\baselineskip}% Increase line spacing
+    		    	\color{white}
+    			    Special notes are designed to draw attention for important information.
+    			    Headers can be multilined, but don't overdo. For increased readability 
+    			    this example increase baselineskip, but nothing prevents You from formating it Your way. Don't put it on chapter pages. It will float to top/outer edge so You need to pay attention to proper placement in the text. Designed for one paragraph content. Keep it no longer that 1/3 of column. If it doesn't fit check last page for advanced handling.
+    		    }
+            \end{center}
+    	
+        \end{framed}
+    \end{custombox}
+    %%%%% END OF SPECIAL NOTES DEFINITION %%%%%
+    
+    \section{Citations}
+
+    \begin{Citation}[Captain Ernesto Castillo]{Never turn your back to the sea, for she is as fickle as fortune itself.}
+    \end{Citation}
+
+    \section{Advantages}
+    \hypertarget{a:innateadvantage}{\BGHeader{Innate Advantage (I)}}
+    This is your inherent advantage
+    
+    \hypertarget{a:knackadvantage}{\BGHeader{Knack Advantage (K)}}
+    Requires Hero Point to activate but no raises
+    
+    \newpage
+    \section{Backgrounds}
+    \BGHeader{Book Maker} 
+    \noindent You live to create beautiful books for others.
+    
+    \Quirk{Quirk}{Gain Hero Point each time You link mentioned text.}
+
+    
+    \begin{table}[h]
+        \centering
+        \renewcommand{\arraystretch}{1.2} % Adjust row height for better readability
+        \begin{tabular}{p{0.45\columnwidth} p{0.45\columnwidth}} % Adjust column width
+            \textbf{Advantages} & \textbf{Skills} \\
+            \hline
+            \hyperlink{a:innateadvantage}{Innate Advantage} & Empathy \\
+            \hyperlink{a:knackadvantage}{Knack Advantage} & Convince \\
+            & Notice \\
+            & Hide \\
+            \hline
+        \end{tabular}
+    \end{table}
+    
+
+
+	\section{Colored text}
+    \begin{ColorText}{
+    	To distinguish some sections from surrounding content use Colortext. Especially usefull for gameplay description or stories to be told.
+    }
+    \end{ColorText}
+    
+    \section{Themes}
+    
+        
+    \setTheme{theah}
+    \BGHeader{theah}
+    
+    \setTheme{khitai}
+    \BGHeader{khitai}
+    
+    \setTheme{newWorld}
+    \BGHeader{newWorld}
+    
+    \setTheme{ifri}
+    \BGHeader{ifri}
+        
+    \setTheme{1knations}
+    \BGHeader{1knations}
+    
+    \setTheme{crescentEmpire}
+    \BGHeader{crescentEmpire}
+    
+    \setTheme{citiesOfWonder}
+    \BGHeader{citiesOfWonder}
+    
+    \setTheme{pirateNations}
+    \BGHeader{pirateNations}
+    
+    \setTheme{priceOfArrogance}
+    \BGHeader{priceOfArrogance}
+
+    % Restore original theme
+    \setTheme{theah}
+    
+       
+    \newpage
+    The following template has been meticulously crafted for optimal performance in print media. Its design philosophy centers on simplicity, ensuring maximum readability while maintaining a visually appealing and consistent style throughout the publication. Each distinct theme introduces a unique palette of colors and incorporates a custom footer graphic, thoughtfully selected to reflect the cultural context associated with the respective theme.
+    
+    The template’s layout is engineered to facilitate both ease of use and adaptability. By providing a clear typographic hierarchy and ample whitespace, it guides the reader’s eye smoothly across the page. The modular structure allows for the seamless integration of various content types, including text, images, and data tables, without compromising the overall aesthetic.
+    
+    A predefined suite of commands is provided for citations, colored text, and tables. This ensures that all references, highlights, and tabular data are presented uniformly, contributing to a cohesive reading experience across the entire book. The design of the \textbf{Advantages} and \textbf{Background} sections remains faithful to the approach established in the original series, preserving the familiar structure that readers have come to expect.
+    
+    Consistency is further reinforced through the use of standardized section headings, consistent font choices, and carefully selected color schemes. These elements work in harmony to create a polished and professional appearance, making the template suitable for a wide range of subject matter and audiences.
+    
+    Special notes are designed to stand out visually, utilizing distinctive formatting to immediately capture the reader's attention. This deliberate emphasis serves to underscore the significance of the content contained within these notes, signaling its importance and encouraging the reader to engage with the highlighted material.
+    
+    The template is intended to be adaptable, supporting a variety of content types while maintaining a consistent visual identity. Authors are encouraged to leverage the provided commands for citations, color accents, and tables to ensure clarity and uniformity. The thoughtful integration of thematic elements and visual cues enhances both the aesthetic appeal and functional readability of the final printed work.
+    
+    In summary, this template offers a harmonious balance between simplicity and visual sophistication. By providing a robust framework for consistent formatting and cultural customization, it empowers authors to produce polished, professional-quality print materials that are both engaging and accessible to a diverse readership.
+    
+    \pagebreak
+    
+\newpage
+%%%%% THIS IS SPECIAL NOTES DEFINITION %%%%%%
+\begin{tikzpicture}[remember picture, overlay]
+	\checkoddpage
+	\ifoddpage
+	% Odd page - position at north west (left side)
+	\fill[baseColor] ([xshift=\columnwidth+\mysidemargin+\mycolumnspace] current page.north west) rectangle
+	++(\columnwidth,-\mytopmargin-300); % HERE CHANGE VALUE TO MATCH HEIGHT OF AREA
+	\else
+	% Even page - position at north east (right side)
+	\fill[baseColor] ([xshift=-\columnwidth-\mysidemargin-\mycolumnspace]current page.north east) rectangle
+	++(-\columnwidth,-\mytopmargin-50); % HERE CHANGE VALUE TO MATCH HEIGHT OF AREA
+	\fi
+\end{tikzpicture}
+
+\vspace{-40pt} % Modify to move content up and down
+
+\begin{mdframed}[linewidth=0pt, innerleftmargin=10pt, innerrightmargin=10pt, backgroundcolor=none]
+	
+	{\color{white}% Restrict color scope with braces
+		\centering % Use \centering instead of \center
+		\Large
+		\MakeUppercase{Advanced handling\\of Special Notes}
+		\par}% Explicitly close the color/centering group
+	\normalsize
+	\raggedright
+	
+	% Draw dotted separator for header and text
+	\vspace{4pt}
+	\begin{tikzpicture}
+		\draw[white, dotted, line width=6pt, dash pattern=on 1pt off 2pt] (0,0) -- (0.97\columnwidth,0);
+	\end{tikzpicture}
+	%\vspace{4pt}
+	\setlength{\parskip}{1em}
+	\begin{center}
+		\parbox{\dimexpr\linewidth-20pt\relax}{% Reduce width for larger margins
+			\setlength{\baselineskip}{1.2\baselineskip}% Increase line spacing
+			\color{white}
+			Sometimes You may experience strange behaviour for special notes.
+			It may indicate that You need to use different approach. This section 
+			shows how it is done.
+			
+			\vspace{1em}
+			Things You need to be aware of:
+			\begin{itemize}
+				\item You need to be specific for placement. It needs to start at
+				top outer column. Otherwise top box won't match
+				
+				\item  Other text won't overflow this area, so You need to properly
+				blend in
+				
+				\item You need to manually take care of vertical spacing between paragraphs
+				
+				\item You need to manually control height of background area - use the source!
+			\end{itemize}
+			
+		}
+	\end{center}
+	
+\end{mdframed}
+%%%%% END OF SPECIAL NOTES DEFINITION %%%%%
+  
+
+
+
+The comprehensive approach to design ensures that every aspect of the publication—from typography to color selection—contributes to an enjoyable and effective reading experience. With its emphasis on clarity, adaptability, and visual appeal, the template stands as a reliable foundation for any print project.
+\end{document}
